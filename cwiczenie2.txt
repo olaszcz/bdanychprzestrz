@@ -1,0 +1,96 @@
+--Utwórz pustą bazę danych:
+
+CREATE DATABASE postgis;
+CREATE SCHEMA postgis;
+--Dodaj finkcjonalności PostGIS'a:
+
+CREATE EXTENSION postgis;
+--Utwórz trzy tabele:
+
+CREATE TABLE postgis.buildings(id INTEGER PRIMARY KEY, geometry GEOMETRY, name VARCHAR(20)NOT NULL);
+CREATE TABLE postgis.roads(id INTEGER PRIMARY KEY, geometry GEOMETRY, name VARCHAR(20)NOT NULL);
+CREATE TABLE postgis.poi(id INTEGER PRIMARY KEY, geometry GEOMETRY, name VARCHAR(20)NOT NULL);
+
+--Wypełnianie tabel:
+--Wypełnij każdą tabelę rekordami:
+--Tabela buildings:
+
+INSERT INTO postgis.buildings VALUES (1,'POLYGON((8 4, 10.5 4, 10.5 1.5, 8 1.5, 8 4 ))', 'BuildingA' );
+INSERT INTO postgis.buildings VALUES (2,'POLYGON((4 5, 4 7, 6 7, 6 5, 4 5))','BuildingB');
+INSERT INTO postgis.buildings VALUES (3,'POLYGON((3 8,5 8,5 6,3 6,3 8))','BuildingC');
+INSERT INTO postgis.buildings VALUES (4,'POLYGON((9 9,10 9, 10 8, 9 8, 9 9))','BuildingD');
+INSERT INTO postgis.buildings VALUES (5,'POLYGON((1 2,2 2, 2 1, 1 1, 1 2))','BuildingF');
+SELECT * FROM postgis.buildings;
+
+--Tabela roads:
+
+INSERT INTO postgis.roads VALUES (1,'LINESTRING(0 4.5, 12 4.5)', 'RoadX' );
+INSERT INTO postgis.roads VALUES (2,'LINESTRING (7.5 0, 7.5 10.5)','RoadY');
+SELECT * FROM postgis.roads;
+
+--Tabela poi:
+
+INSERT INTO postgis.poi VALUES (1,'POINT(1 3.5)', 'G' );
+INSERT INTO postgis.poi VALUES (2,'POINT(5.5 1.5)', 'H' );
+INSERT INTO postgis.poi VALUES (3,'POINT(9.5 6)', 'I' );
+INSERT INTO postgis.poi VALUES (4,'POINT(6.5 6)', 'J' );
+INSERT INTO postgis.poi VALUES (5,'POINT(6 9.5)', 'K' );
+SELECT * FROM postgis.poi;
+
+--a.Wyznacz całkowitą długość dróg w analizowanym mieście.  
+
+SELECT SUM(ST_Length(geometry)) FROM postgis.roads;
+
+--b.Wypisz geometrię (WKT), pole powierzchni oraz obwód poligonu reprezentującego budynek o nazwie BuildingA. 
+
+SELECT ST_AsText(geometry), ST_Area(geometry), ST_Perimeter(geometry)
+FROM postgis.buildings WHERE name = 'BuildingA';
+
+--c.Wypisz nazwy i pola powierzchni wszystkich poligonów w warstwie budynki. Wyniki posortuj alfabetycznie.
+
+SELECT name, ST_Area(geometry)
+FROM postgis.buildings ORDER BY name;
+
+--d.Wypisz nazwy i obwody 2 budynków o największej powierzchni.
+
+SELECT name, ST_Perimeter(geometry)
+FROM postgis.buildings ORDER BY ST_Perimeter(geometry) LIMIT 2;
+
+--e.Wyznacz najkrótszą odległość między budynkiem BuildingC a punktem G.  
+
+SELECT ST_Distance(b.geometry, p.geometry) 
+FROM  postgis.buildings b
+CROSS JOIN postgis.poi p WHERE b.name = 'BuildingC'
+AND p.name = 'G';
+
+
+--f.Wypisz pole powierzchni tej części budynku BuildingC, 
+--która znajduje się w odległości większej niż 0.5 od budynku BuildingB.
+
+SELECT ROUND(CAST(ST_Area(ST_Difference(bC.geometry, ST_Buffer(bB.geometry, 0.5))) AS
+numeric), 4) AS PoleWycinka FROM postgis.buildings AS bB, postgis.buildings AS bC WHERE
+bB.name='BuildingB' AND bC.name='BuildingC';
+
+
+
+--g.Wybierz te budynki, których centroid (ST_Centroid) znajduje 
+--się powyżej drogi o nazwie RoadX. Oblicz pole powierzchni tych 
+--części budynku BuildingC i poligonu o współrzędnych
+--(4 7, 6 7, 6 8, 4 8, 4 7), które nie są wspólne dla tych 
+--dwóch obiektów.
+
+SELECT postgis.buildings.name, ST_AsText(postgis.buildings.geometry)
+FROM postgis.buildings, postgis.roads WHERE postgis.roads.name = 'RoadX'
+AND ST_Y(ST_Centroid(postgis.buildings.geometry)) > 
+ST_Y(ST_Centroid(postgis.roads.geometry));
+
+
+
+
+
+
+
+
+
+
+
