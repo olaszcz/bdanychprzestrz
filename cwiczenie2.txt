@@ -84,6 +84,9 @@ FROM postgis.buildings, postgis.roads WHERE postgis.roads.name = 'RoadX'
 AND ST_Y(ST_Centroid(postgis.buildings.geometry)) > 
 ST_Y(ST_Centroid(postgis.roads.geometry));
 
+SELECT postgis.buildings.geometry, 
+ST_Area(St_Difference(postgis.buildings.geometry,'POLYGON((4 7, 6 7, 6 8, 4 8, 4 7))'))
+FROM postgis.buildings WHERE postgis.buildings.name = 'BuildingC';
 
 
 
