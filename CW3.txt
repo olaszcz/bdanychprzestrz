@@ -1,0 +1,53 @@
+--4.Wyznacz liczbę budynków (tabela: popp, atrybut: f_codedesc, reprezentowane, jako punkty) 
+--położonych w odległości mniejszej niż 1000 m od głównych rzek. 
+--Budynki spełniające to kryterium zapisz do osobnej tabeli tableB.
+
+SELECT DISTINCT public.popp.gid, public.popp.cat,
+public.popp.f_codedesc, public.popp.f_code, public.popp.type, public.popp.geom
+INTO tableB FROM public.popp, public.majrivers WHERE
+public.popp.f_codedesc = 'Building' 
+AND ST_Contains(ST_Buffer(public.majrivers.geom,1000), public.popp.geom) = 'TRUE';
+
+--liczba:
+SELECT COUNT(*) FROM tableB;
+
+--5.Utwórz tabelę o nazwie airportsNew. Z tabeli airports do zaimportuj nazwy lotnisk, 
+--ich geometrię, a także atrybut elev, reprezentujący wysokość n.p.m.
+
+SELECT name,geom,elev INTO airportsNew FROM airports;
+
+--a) Znajdź lotnisko, które położone jest najbardziej na zachód i najbardziej na wschód. 
+
+(SELECT name,ST_Y(geom)AS zachod FROM public.airportsNew ORDER BY zachod DESC LIMIT 1) 
+UNION ALL
+(SELECT name,ST_Y(geom)AS wschod FROM public.airportsNew ORDER BY wschod ASC LIMIT 1);
+
+ 
+--b) Do tabeli airportsNew dodaj nowy obiekt - lotnisko, które położone jest w punkcie
+--środkowym drogi pomiędzy lotniskami znalezionymi w punkcie a. Lotnisko nazwij airportB.
+--Wysokość n.p.m. przyjmij dowolną.
+
+INSERT INTO public.airportsNew (name, geom, elev)
+VALUES ('airportB',ST_Point((SELECT((SELECT (ST_Y(geom)/2) 
+FROM public.airportsNew WHERE name= 'NOATAK') +
+(SELECT SUM((ST_Y(geom))/2) FROM public.airportsNew WHERE name= 'NIKOLSKI AS'))),
+(SELECT((SELECT SUM((ST_X(geom))/2) FROM public.airportsNew WHERE name= 'NOATAK') +
+(SELECT (ST_X(geom)/2) FROM public.airportsNew WHERE name= 'NIKOLSKI AS')))), 567);
+
+--6.Wyznacz pole powierzchni obszaru, który oddalony jest mniej niż 1000 jednostek od 
+--najkrótszej linii łączącej jezioro o nazwie ‘Iliamna Lake’ i lotnisko o nazwie „AMBLER”:
+
+SELECT ST_Area(ST_Buffer(ST_Shortestline(a.geom, l.geom),1000)) FROM
+public.airports a CROSS JOIN public.lakes l
+WHERE a.name = 'AMBLER' AND l.names = 'Iliamna Lake';
+
+--7.Napisz zapytanie, które zwróci sumaryczne pole powierzchni poligonów reprezentujących 
+--poszczególne typy drzew znajdujących się na obszarze tundry i bagien (swamps).  
+
+SELECT public.trees.vegdesc, SUM(ST_Area(public.trees.geom)) AS SumarycznePolePoligonów 
+FROM public.trees, public.swamp, public.tundra 
+WHERE ST_Contains(public.tundra.geom, public.trees.geom) OR ST_Contains(public.swamp.geom,
+public.trees.geom) GROUP BY vegdesc;
+
+
+
