@@ -1,0 +1,17 @@
+Archive:  tmp.zip
+  inflating: Customers_Nov2021.csv   
+--2021-12-22 15:56:29--  https://home.agh.edu.pl/~wsarlej/Customers_old.csv
+Translacja home.agh.edu.pl (home.agh.edu.pl)... 149.156.98.66, 2001:6d8:10:1127::6242
+Łączenie się z home.agh.edu.pl (home.agh.edu.pl)|149.156.98.66|:443... połączono.
+Żądanie HTTP wysłano, oczekiwanie na odpowiedź... 200 OK
+Długość: 6209 (6,1K) [text/csv]
+Zapis do: `Customers_old.csv'
+
+     0K ......                                                100% 1,65M=0,004s
+
+2021-12-22 15:56:30 (1,65 MB/s) - zapisano `Customers_old.csv' [6209/6209]
+
+CREATE TABLE
+COPY 95
+COPY 5
+  adding: sphere.csv (deflated 19%)
